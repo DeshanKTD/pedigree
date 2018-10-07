@@ -442,3 +442,26 @@ function getMaxGeneration(data) {
 
     return max;
 }
+
+
+// get all nodes in generation
+function getNodesInGeneration(nodes, generation) {
+    let currentGenList = [];
+
+    nodes.forEach(function (node) {
+        if (node.generation == generation) {
+            currentGenList.push(node);
+        }
+    })
+
+    return currentGenList;
+}
+
+
+function sortNodesInOrderOfPosition(nodes) {
+    nodes = nodes.sort(function (a, b) {
+        return a.x < b.x;
+    })
+
+    return nodes;
+}

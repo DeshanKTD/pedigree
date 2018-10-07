@@ -46,7 +46,7 @@ function update(source) {
     links = crossParentLinks.concat(links);
 
     // add partner links
-    let partnerLinks = generatePartnerLinks(d3DataArray );
+    let partnerLinks = generatePartnerLinks(d3DataArray);
     links = partnerLinks.concat(links);
 
     // Normalize for fixed-depth.
@@ -68,7 +68,7 @@ function update(source) {
         });
 
     nodeEnter.append("circle")
-        .attr("r", 15)
+        .attr("r", 10)
         .style("fill", "#fff")
         .style("opacity", function (d) {
             if (!d.visible) {
@@ -171,17 +171,18 @@ function generatePartnerLinks(dataArray) {
     return linkArray;
 }
 
-count = 0;
 
 // create box link paths
 function createNodePath(node) {
 
-    count++;
     let sourceHeight = node.source.y;
     let sourceWidth = node.source.x;
     let targetHeight = node.target.y;
     let targetWidth = node.target.x;
 
+    if (checkParent(node)) {
+        sourceWidth = _getMidPosition(node)
+    }
 
     let heightMid = (sourceHeight + targetHeight) / 2;
 
@@ -208,23 +209,71 @@ function createNodePath(node) {
 }
 
 
+// check the line is parent child line
 function checkParent(link) {
     let isParent = false;
 
-    let child = link.target;
-    let parent = link.source;
-    if (link.target.depth < link.source.depth) {
-        child = link.source;
-        parent = link.target;
-    }
+    let obj = _getChildnParent(link);
 
-    if (child.mother == parent.id || child.father == parent.id) {
+    if (obj.child.mother == obj.parent.id || obj.child.father == obj.parent.id) {
         isParent = true;
     }
 
     return isParent;
 }
 
+
+// select parent and child from given link
+function _getChildnParent(link) {
+    
+    let child = link.target;
+    let parent = link.source;
+    if (link.target.depth < link.source.depth) {
+        child = link.source;
+        parent = link.target;
+    }
+    
+    return {
+        "child": child,
+        "parent": parent
+    }
+}
+
+// get mid position of partners
+function _getMidPosition(link) {
+    let obj = _getChildnParent(link);
+    let parent = obj.parent;
+    let child = obj.child;
+    let position = 0;
+    let x;
+    
+    if (parent.partners) {
+        
+        if (parent.partners.length > 0) {
+            parent.partners.forEach(function (partner, index) {
+                if (partner == child.mother || partner == child.father) {
+                    position = index;
+                }
+            })
+            
+            let partner = getObjectNodeById(d3DataArray, parent.partners[position]);
+            if (position == 0) {
+                x = (parent.x + partner.x) / 2;
+            } else {
+                let prevPartner = getObjectNodeById(d3DataArray, parent.partners[position - 1]);
+                x = (prevPartner.x + partner.x) / 2;
+            }
+        }else{
+            x = parent.x;
+        }
+        
+    }
+    return x;
+    
+}
+
+
+// check line is partner line
 function checkPartner(link) {
     let partner = false;
 
@@ -245,6 +294,29 @@ function checkPartner(link) {
 
     return partner;
 }
+
+
+// change position of nodes
+function centerParentNodes(nodes){
+    let maxGen = getMaxGeneration(nodes);
+    let currentGenList = [];
+
+    for(let i=maxGen; i>=0; i++){
+        currentGenList = getNodesInGeneration(nodes,i);
+        currentGenList = sortNodesInOrderOfPosition(currentGenList);
+
+        currentGenList.forEach(function(node){
+            let parent = node.parent;
+            if(parent.visible && (node.father==parent.id || node.mother==parent.id)){
+                
+            }
+        })
+    }
+
+    
+
+}
+
 
 // display
 
